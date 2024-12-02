@@ -76,3 +76,6 @@ Spitzer_IRAC.I4    75890.54
 Spitzer_MIPS.24mu  232089.81
 Spitzer_MIPS.70mu  684400.65
 Spitzer_MIPS.160mu 1.53e6
+Palomar_ZTF.g	   4746.48
+Palomar_ZTF.r	   6366.38
+Palomar_ZTF.i	   7829.03	

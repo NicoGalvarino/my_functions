@@ -72,5 +72,3 @@ def get_linear_interpolation(luminosity, grid, extrapolate=False, wav_min = 912,
         interpolated_data[:,2] = func_dy(grid)-interpolated_data[:,1]
     
     return interpolated_data
-
-
