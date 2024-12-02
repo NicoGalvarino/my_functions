@@ -455,18 +455,11 @@ def get_sed(which_sed='krawczyk', which_type='All', normalization=False, log_log
     path = os.path.join(PATH_TO_DATA, path)
 
     if 'krawczyk' in which_sed.lower():
-        SED = pd.read_csv(os.path.join(path,'krawczyk_sed.csv') , sep=',', header=0)
-        x = SED['lambda'].to_numpy()
-        if 'all' in which_type.lower():
-            y = SED['All'].to_numpy()
-        elif 'low' in which_type.lower():
-            y = SED['Low_luminosity'].to_numpy()
-        elif 'mid' in which_type.lower():
-            y = SED['Mid_luminosity'].to_numpy()
-        elif 'high' in which_type.lower():
-            y = SED['High_luminosity'].to_numpy()
-        else:
-            raise Exception("which_type can be 'All', 'mid', 'high', 'low'")
+        sed = pd.read_csv(os.path.join(path,'krawczyk_13.dat') , sep=' ', header=0, comment ='#')
+        sed_types = [i for  i in sed.columns[1:] if "sigma" not in i]
+        if which_type.casefold()  not in sed_types:
+            raise Exception(f"which_type must be one of {sed_types}")
+        x, y = sed["lambda"].to_numpy(), sed[which_type.casefold()].to_numpy()
     
     elif 'wissh' in which_sed.lower():
         SED = pd.read_csv(os.path.join(path,'wissh_sed.csv') , sep=',', header=0)
@@ -518,6 +511,13 @@ def get_sed(which_sed='krawczyk', which_type='All', normalization=False, log_log
         else:
             raise Exception("which_type can be 'All', 'blue', 'red', 'opt_lum', 'opt_dim', 'ir_lum', 'ir_dim' ")
     
+    elif 'richards'in which_sed.lower():
+        SED = pd.read_csv(os.path.join(path,'richards_06.dat') , sep=' ', header=0, comment ='#')
+        sed_types = [i for  i in sed.columns[1:] if "sigma" not in i]
+        if which_type.casefold()  not in sed_types:
+            raise Exception(f"which_type must be one of {sed_types}")
+        x, y = sed["lambda"].to_numpy(), sed[which_type.casefold()].to_numpy()
+            
     elif "polletta" in which_sed.lower():
         path = os.path.join(path, "polletta")
         if "all" in which_type.lower():
@@ -529,10 +529,8 @@ def get_sed(which_sed='krawczyk', which_type='All', normalization=False, log_log
         else:
             fname = os.path.join(path,f"{which_type}_template_norm.sed")
             try:
-                SED = pd.read_csv(fname, header = None, delim_whitespace=True).to_numpy()
-                x, y = SED[:,0], SED[:,1] #for consistency with other tables
-                y = np.log10(x*y) #lambdaF_lambda
-                x = np.log10(x)
+                sed = pd.read_csv(fname, header = None, sep='\s+').to_numpy()
+                x, y = sed[:,0], sed[:,1]*sed[:,0] # lambda*F_lambda
             except FileNotFoundError:
                 print(f"{which_type} not found, available SEDs from Polletta are:")
                 available_sed = [i for i in os.listdir(path) if i.endswith(".sed")]
@@ -541,13 +539,18 @@ def get_sed(which_sed='krawczyk', which_type='All', normalization=False, log_log
                 raise Exception 
     
     elif "berk" in which_sed.lower():
-        SED = pd.read_csv(os.path.join(path,'vanden_berk_composite.dat') , delim_whitespace = True, header=0)
-        x = SED["lambda"].to_numpy()
-        y = np.log10(x*SED["f_lambda"].to_numpy())
-        x = np.log10(x)     
-        
+        sed = pd.read_csv(os.path.join(path,'vandenberk_01.dat') , sep='\s+', header=0)
+        x = sed["lambda"].to_numpy(), 
+        y = x*sed["f_lambda"].to_numpy()    
+
+    elif "caballero" in which_sed.lower():
+        sed = pd.read_csv(os.path.join(path,'hernan_caballero_17.dat') , sep=' ', header=0, comment = '#')
+        sed_types = [i for  i in sed.columns[1:] if "sigma" not in i]
+        if which_type.casefold()  not in sed_types:
+            raise Exception(f"which_type must be one of {sed_types}")
+        x, y = sed["lambda"].to_numpy(), sed[which_type.casefold()].to_numpy()
     else:
-        raise Exception("Which_sed can be 'wissh', 'krawczyk', 'richards' 'polletta', 'vandenberk'")
+        raise Exception("Which_sed can be 'wissh', 'krawczyk', 'richards' 'polletta', 'vandenberk', 'caballero'")
 
     if normalization and log_log:
         normalization = [10**k for k in normalization]
@@ -570,6 +573,7 @@ def get_sed(which_sed='krawczyk', which_type='All', normalization=False, log_log
     y = np.reshape(y, (y.shape[0], 1))
     sed = np.concatenate((x, y), axis=1)
 
+    sed = np.vstack([x,y]).T
     return sed
 
 
@@ -743,9 +747,12 @@ def get_mono_xray_from_integrated(energy, L_integrated, energy_1 = 2, energy_2 =
 class quasar_lines:
     """Loads Table 2 (list of all observed lines in QSO spectrum) in Vanden Berk+2001"""
     def __init__(self, maxrows = 20, flux_sorted = True, remove_iron = False,
-                 dropped_columns = None):
+                 wavmin = None, dropped_columns = None):
         path = os.path.join(PATH_TO_DATA,"tables/various","vanden_berk_2001_tab2.dat")
-        self.table = pd.read_csv(path, sep=' ')
+        self.table = pd.read_csv(path, sep=' ', comment="#")
+
+        if wavmin is not None:
+            self.table = self.table[self.table["obs_wav"]>= wavmin]
         if flux_sorted:
             self.table.sort_values(by="flux", inplace = True, ascending = False)
         if remove_iron:
