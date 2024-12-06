@@ -40,8 +40,7 @@ import pytz
 
 
 
-PATH_TO_DATA =  '/Users/nicolasgalvarinoguerravaras/Documents/EMJM_MASS/Thesis/my_functions/'
-
+PATH_TO_DATA =  '/Users/nguerrav/Documents/BAL_ML/my_functions/'
 
 
 
@@ -454,6 +453,10 @@ def get_sed(which_sed='krawczyk', which_type='All', normalization=False, log_log
 
     path = os.path.join(PATH_TO_DATA, path)
 
+def get_sed(which_sed='krawczyk', which_type='All', normalization=False, log_log=False, path='tables/sed_templates'):
+   
+    path = os.path.join(PATH_TO_DATA ,path)
+   
     if 'krawczyk' in which_sed.lower():
         sed = pd.read_csv(os.path.join(path,'krawczyk_13.dat') , sep=' ', header=0, comment ='#')
         sed_types = [i for  i in sed.columns[1:] if "sigma" not in i]
@@ -462,54 +465,8 @@ def get_sed(which_sed='krawczyk', which_type='All', normalization=False, log_log
         x, y = sed["lambda"].to_numpy(), sed[which_type.casefold()].to_numpy()
     
     elif 'wissh' in which_sed.lower():
-        SED = pd.read_csv(os.path.join(path,'wissh_sed.csv') , sep=',', header=0)
-        x = np.log10(SED['lambda'].to_numpy())
-        y = np.log10(SED['L'].to_numpy())
-
-    elif 'saccheo_all' in which_sed.lower():
-        SED = pd.read_csv(os.path.join(path,'saccheo_tab4.csv') , sep=',', header=0)
-        x = SED['loglambda'].to_numpy(dtype=np.float64)
-        y = SED['logmean'].to_numpy(dtype=np.float64)
-
-    elif 'saccheo_bal' in which_sed.lower():
-        SED = pd.read_csv(os.path.join(path,'saccheo_tab4.csv') , sep=',', header=0, skipinitialspace=True)
-        x = SED['loglambda'].to_numpy(dtype=np.float64)
-        y = SED['logBAL'].to_numpy()#dtype=np.float64)
-
-    elif 'saccheo_nonbal' in which_sed.lower():
-        SED = pd.read_csv(os.path.join(path,'saccheo_tab4.csv') , sep=',', header=0, skipinitialspace=True)
-        x = SED['loglambda'].to_numpy(dtype=np.float64)
-        y = SED['logNonBAL'].to_numpy(dtype=np.float64)
-
-    elif 'saccheo_weakCiv' in which_sed.lower():
-        SED = pd.read_csv(os.path.join(path,'saccheo_tab4.csv') , sep=',', header=0, skipinitialspace=True)
-        x = SED['loglambda'].to_numpy(dtype=np.float64)
-        y = SED['logWeak'].to_numpy(dtype=np.float64)
-
-    elif 'saccheo_nonweakCiv' in which_sed.lower():
-        SED = pd.read_csv(os.path.join(path,'saccheo_tab4.csv') , sep=',', header=0, skipinitialspace=True)
-        x = SED['loglambda'].to_numpy(dtype=np.float64)
-        y = SED['logNonWeak'].to_numpy(dtype=np.float64)
-
-    elif 'richards'in which_sed.lower():
-        SED = pd.read_csv(os.path.join(path,'richards_sed.csv') , sep=',', header=0)
-        x = SED['lambda'].to_numpy()
-        if 'all' in which_type.lower():
-            y = SED['all'].to_numpy()
-        elif 'blue' in which_type.lower():
-            y = SED['blue'].to_numpy()
-        elif 'red' in which_type.lower():
-            y = SED['red'].to_numpy()
-        elif 'opt_lum' in which_type.lower():
-            y = SED['opt_lum'].to_numpy()
-        elif 'opt_dim' in which_type.lower():
-            y = SED['opt_dim'].to_numpy()
-        elif 'ir_lum' in which_type.lower():
-            y = SED['ir_lum'].to_numpy()
-        elif 'ir_dim' in which_type.lower():
-            y = SED['ir_dim'].to_numpy()
-        else:
-            raise Exception("which_type can be 'All', 'blue', 'red', 'opt_lum', 'opt_dim', 'ir_lum', 'ir_dim' ")
+        sed = pd.read_csv(os.path.join(path, 'wissh_S23.dat') , sep=' ', header=0)
+        x, y  = sed['lambda'].to_numpy(), sed["L"].to_numpy()
     
     elif 'richards'in which_sed.lower():
         SED = pd.read_csv(os.path.join(path,'richards_06.dat') , sep=' ', header=0, comment ='#')

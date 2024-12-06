@@ -4,28 +4,20 @@ from scipy import integrate
 import numpy.polynomial.polynomial as poly
 import pandas as pd
 from scipy.interpolate import interp1d
-<<<<<<< HEAD
-<<<<<<< Updated upstream
 # from my_functions
-import library as lb
-
-=======
+# import library as lb
 from scipy import stats
->>>>>>> e2a4a9c5c0d04c0b1689f67ef00608bb17668c5a
 
-PATH_TO_DATA =  '/Users/nicolasgalvarinoguerravaras/Documents/EMJM_MASS/Thesis/my_functions/'
-=======
+
 import sys
-sys.path.append('./')
-# from my_functions import library as lb
-import library as lb
->>>>>>> Stashed changes
+sys.path.append('/Users/nguerrav/Documents/BAL_ML/')
+from my_functions import library as lb
+# import library as lb
 
-path = '/Users/nicolasgalvarinoguerravaras/Documents/EMJM_MASS/Thesis/my_functions/'
-
+path = '/Users/nguerrav/Documents/BAL_ML/my_functions/'
+PATH_TO_DATA = '/Users/nguerrav/Documents/BAL_ML/my_functions/'
 
 #  IGM absorption
-
 def lyman_continuum_LAF(redshift, lambda_obs):
     
     ll = 911.8                   #lyman-limit
@@ -59,10 +51,7 @@ def lyman_continuum_LAF(redshift, lambda_obs):
 
     return tau
 
-<<<<<<< Updated upstream
 
-=======
->>>>>>> Stashed changes
 def lyman_continuum_DLA(redshift, lambda_obs):
     
     ll = 911.8                   #lyman-limit
@@ -83,11 +72,8 @@ def lyman_continuum_DLA(redshift, lambda_obs):
         tau[idx2] = 0.047*((1+redshift)**3)-0.0178*((1+redshift)**3.3)*(wav[idx2]**(-0.3))-0.0292*(wav[idx2]**3)
     
     return tau
-<<<<<<< Updated upstream
     
-=======
 
->>>>>>> Stashed changes
 
 def lyman_series_LAF(redshift, lambda_obs, coefficients):
     
@@ -138,24 +124,13 @@ def lyman_series_DLA(redshift, lambda_obs, coefficients):
            
     return np.sum(tau, axis = 1)
 
-<<<<<<< Updated upstream
-def get_lyman_coefficients(coefficients_path= "tables/various/lyman_series_coefficients.dat"):
-    path = os.path.join(PATH_TO_DATA,coefficients_path)
-    return np.loadtxt(path)
-    
-    
-def get_IGM_absorption(redshift, lambda_obs, coefficients = get_lyman_coefficients(), DLA = True):
-    """ 
-    Optical depth computed according to Inoue et al. 2014
-    """
-=======
-def get_lyman_coefficients(coefficients_path=path+'tables/various/lyman_series_coefficients.dat'):
-    return np.loadtxt(coefficients_path)
+
+def get_lyman_coefficients(coefficients_path="tables/various/lyman_series_coefficients.dat"):
+    return np.loadtxt(PATH_TO_DATA+coefficients_path)
 
 
 def get_IGM_absorption(redshift, lambda_obs, coefficients=get_lyman_coefficients(), DLA=True):
     """ Optical depth computed according to Inoue et al. 2014"""
->>>>>>> Stashed changes
     tau_continuum_laf = lyman_continuum_LAF(redshift, lambda_obs)
     
     tau_series_laf = lyman_series_LAF(redshift, lambda_obs, coefficients)
@@ -168,28 +143,6 @@ def get_IGM_absorption(redshift, lambda_obs, coefficients=get_lyman_coefficients
         return  tau_continuum_laf +  tau_continuum_dla + tau_series_laf + tau_series_dla
 
 
-<<<<<<< Updated upstream
-def correct_magnitudes(redshift, filtro, emission_lines = True, IGM = True, DLA = True, 
-                       spectrum_path = "tables/various/vanden_berk_13.dat"):
-    """
-    It returns an array with the magnitude corrections for the required filter.
-    
-    Redshift : iterable, with the redshifts of the sources
-    filtro : object from library.filtro()
-    emission_lines : bool, whether to apply corrections for the emission lines
-    IGM : bool, whether to apply corrections for the InterGalctic Medium
-    DLA : bool, whether to consider Deep Lyman Absorber in the IGM
-    """
-    filtro.get_transmission()
-    lambda_obs = filtro.transmission[:,0]
-    transmission = filtro.transmission[:,1]
-    path = os.path.join(PATH_TO_DATA, spectrum_path)
-    spectrum_rest = np.loadtxt(path, skiprows = 0) # 0 col= rest frame wav, 1 col = no Emission Lines, 2 col = with EL
-    delta_M =[]
-    for z in redshift:    
-        delta_m_IGM =0
-        delta_m_EL =0
-=======
 def shift_to_observed(spectrum, redshift, lambda_obs):
    x = spectrum[:,0]*(redshift +1)
    continuum = np.interp(lambda_obs, x, spectrum[:,1])
@@ -218,65 +171,10 @@ def correct_magnitudes(redshift, filter_path,
         delta_m_IGM = 0
         delta_m_EL = 0
 
->>>>>>> Stashed changes
         continuum, lines = shift_to_observed(spectrum_rest, z, lambda_obs)
         den = integrate.trapezoid(continuum*lambda_obs*transmission, lambda_obs)
 
         if IGM:
-<<<<<<< Updated upstream
-            tau = get_IGM_absorption(z, lambda_obs, DLA = DLA)
-            y = np.exp(-tau)
-            num = integrate.trapezoid(y*continuum*lambda_obs*transmission, lambda_obs)
-            delta_m_IGM = -2.5*np.log10(num/den)
-        if emission_lines:
-            num = integrate.trapezoid(lines*lambda_obs*transmission, lambda_obs)
-            delta_m_EL = -2.5*np.log10(num/den)
-        delta_M.append(delta_m_IGM+delta_m_EL)
-    delta_M = np.asarray(delta_M)
-    return delta_M
-    
-    
-def shift_to_observed(spectrum, redshift, lambda_obs):
-    x = spectrum[:,0]*(redshift +1)
-    continuum = np.interp(lambda_obs, x, spectrum[:,1])
-    lines = np.interp(lambda_obs, x, spectrum[:,2])
-
-    return continuum, lines
-        
-        
-def gap_filling(magnitudes, redshift,coefficients, SED_path = None):
-    
-    if SED_path is None:
-        sed = lb.get_sed(which_sed = "krawczyk", which_type = "all")
-        print("Using mean SED by Krawczyk+13 to perform gap repair")
-    else:
-        sed = np.loadtxt(SED_path, skiprows = 0) #lambda, lambdaL_lambda
-    
-    filled_magnitudes = np.copy(magnitudes)
-    lack_data_all = np.isnan(filled_magnitudes[:,:,1])
-    
-    for i, (lack_data, z) in enumerate(zip(lack_data_all, redshift)):
-        has_mag = filled_magnitudes[i, ~lack_data, :]   ##Just for easy reading
-        lack_mag = filled_magnitudes[i, lack_data, :]   
-        nearest_filter = [np.argmin(np.abs(wav - has_mag[:,0])) for wav in lack_mag[:,0]] ##find closest band with available data
-        Fnu_has_mag = np.interp(has_mag[nearest_filter,0]/(z+1), sed[:,0], sed[:,1])*has_mag[nearest_filter,0]
-        Fnu_lack_mag = np.interp(lack_mag[:,0]/(z+1), sed[:,0], sed[:,1])*lack_mag[:,0]
-        filled_magnitudes[i, lack_data, 1] = has_mag[nearest_filter,1] -2.5*np.log10(Fnu_lack_mag/Fnu_has_mag)
-    
-    for j, coefficient in enumerate(coefficients):     #iterating over the bands, adding uncertainties
-        filled_magnitudes[lack_data_all[:,j], j, 2] = np.polyval(coefficient, filled_magnitudes[lack_data_all[:,j], j, 1])
-
-    return filled_magnitudes
-
-
-
-
-def host_correction(L, control_negative = True, Niter=3):
-    
-    L5100 = lb.monochromatic_lum(L, 5100, out_of_bounds='extrapolate')
-    L6156 = lb.monochromatic_lum(L, 6156, out_of_bounds='extrapolate')
-    sed = lb.get_host()
-=======
            tau = get_IGM_absorption(z, lambda_obs, DLA=DLA)
            y = np.exp(-tau)
            num = integrate.trapezoid(y*continuum*lambda_obs*transmission, lambda_obs)
@@ -387,15 +285,10 @@ def host_correction(L, host_path ='~/DATA/Tables/galaxy_template.dat', control_n
     L5100 = lb.monochromatic_lum(L, 5100, out_of_bounds='extrapolate')
     L6156 = lb.monochromatic_lum(L, 6156, out_of_bounds='extrapolate')
     sed = pd.read_csv(host_path, header=None, sep =' ').to_numpy()
->>>>>>> Stashed changes
     
     sed[:,1] = sed[:,1] / np.interp(5100, sed[:,0], sed[:,1]) #sed normalized at 5100A°
     host_f = interp1d(sed[:,0], sed[:,1], bounds_error=False ,fill_value=0)
-<<<<<<< Updated upstream
     scale = 1 / host_f(6156)
-=======
-    scale = 1 / host_f(6156),
->>>>>>> Stashed changes
     deltaL = np.zeros(np.shape(L))
     
     host = get_host_luminosity(L5100, L6156, scale, Niter=Niter)
@@ -412,7 +305,6 @@ def host_correction(L, host_path ='~/DATA/Tables/galaxy_template.dat', control_n
     return deltaL
 
 
-<<<<<<< Updated upstream
 def get_host_luminosity(L5100, L6156, scale, Niter = 3):
     """Returns the Host luminosity at 5100 A.
         Scale = L5100/L6156
@@ -581,24 +473,3 @@ def get_lines_vandenberk(wavlen, table):
 
 
 
-=======
-def process_errors(magnitudes, minimum_error=0.0, get_fit=True, deg=3, shift_errors=False, missing_data_error=0.1):
-    magnitudes[:,:,2] = np.maximum(magnitudes[:,:,2], minimum_error)  # set a minimum uncertainty value
-    coefficients = []
-    if get_fit:
-       mag = np.ma.MaskedArray(magnitudes[:,:,:], mask=np.isnan(magnitudes[:,:,:]))
-       for i in range(magnitudes.shape[1]):
-           coeff = np.ma.polyfit(mag[:,i,1], mag[:,i,2], deg) #interpolating errors on magnitudes to get similar values
-           if shift_errors:
-              variance = np.sqrt(np.nansum((mag[:,i,2]-np.polyval(coeff,mag[:,i,1]))**2)/mag.shape[0])
-              for j in range(np.shape(magnitudes)[0]):
-                  if np.polyval(coeff,magnitudes[j,i,1])-magnitudes[j,i,2]>=variance:      #shifting errors which deviate from the fit
-                     magnitudes[j,i,2] = np.polyval(coeff,magnitudes[j,i,1])
-           coefficients.append(coeff)
-    else:
-       for i in range(magnitudes.shape[1]):
-           coeff = [0 for k in range(deg)]
-           coeff.append(missing_data_error)
-           coefficients.append(coeff)
-    return magnitudes, coefficients
->>>>>>> Stashed changes
