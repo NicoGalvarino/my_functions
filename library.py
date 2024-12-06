@@ -467,6 +467,31 @@ def get_sed(which_sed='krawczyk', which_type='All', normalization=False, log_log
     elif 'wissh' in which_sed.lower():
         sed = pd.read_csv(os.path.join(path, 'wissh_S23.dat') , sep=' ', header=0)
         x, y  = sed['lambda'].to_numpy(), sed["L"].to_numpy()
+
+    elif 'saccheo_all' in which_sed.lower():
+        SED = pd.read_csv(os.path.join(path,'saccheo_tab4.csv') , sep=',', header=0)
+        x = SED['loglambda'].to_numpy(dtype=np.float64)
+        y = SED['logmean'].to_numpy(dtype=np.float64)
+
+    elif 'saccheo_bal' in which_sed.lower():
+        SED = pd.read_csv(os.path.join(path,'saccheo_tab4.csv') , sep=',', header=0, skipinitialspace=True)
+        x = SED['loglambda'].to_numpy(dtype=np.float64)
+        y = SED['logBAL'].to_numpy()#dtype=np.float64)
+
+    elif 'saccheo_nonbal' in which_sed.lower():
+        SED = pd.read_csv(os.path.join(path,'saccheo_tab4.csv') , sep=',', header=0, skipinitialspace=True)
+        x = SED['loglambda'].to_numpy(dtype=np.float64)
+        y = SED['logNonBAL'].to_numpy(dtype=np.float64)
+
+    elif 'saccheo_weakCiv' in which_sed.lower():
+        SED = pd.read_csv(os.path.join(path,'saccheo_tab4.csv') , sep=',', header=0, skipinitialspace=True)
+        x = SED['loglambda'].to_numpy(dtype=np.float64)
+        y = SED['logWeak'].to_numpy(dtype=np.float64)
+
+    elif 'saccheo_nonweakCiv' in which_sed.lower():
+        SED = pd.read_csv(os.path.join(path,'saccheo_tab4.csv') , sep=',', header=0, skipinitialspace=True)
+        x = SED['loglambda'].to_numpy(dtype=np.float64)
+        y = SED['logNonWeak'].to_numpy(dtype=np.float64)
     
     elif 'richards'in which_sed.lower():
         SED = pd.read_csv(os.path.join(path,'richards_06.dat') , sep=' ', header=0, comment ='#')
