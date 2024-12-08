@@ -45,6 +45,7 @@ def lyman_continuum_LAF(redshift, lambda_obs):
             
         tau[idx3] = 0.000522*(((1+redshift)**3.4)*(wav[idx3]**2.1)- (wav[idx3]**5.5))
 
+
     return tau
 
 
@@ -57,6 +58,7 @@ def lyman_continuum_DLA(redshift, lambda_obs):
     if redshift < 2:
         idx = wav < (1+redshift) 
         tau[idx] = 0.211*((1+redshift)**2) - 0.0766*((1+redshift)**2.3)*(wav[idx]**(-0.3))-0.135*(wav[idx]**2) 
+
 
     else:
         idx1 = wav < 3
@@ -94,9 +96,9 @@ def lyman_series_LAF(redshift, lambda_obs, coefficients):
     
         tau[idx3, j] = coefficients[j,4]*((wav[idx3]/coefficients[j,1])**5.5)
     
-    return np.sum(tau, axis = 1)
-    
-    
+    return np.sum(tau, axis=1)
+
+
 def lyman_series_DLA(redshift, lambda_obs, coefficients):
     
     wav = lambda_obs ##just for clarity
@@ -162,6 +164,7 @@ def correct_magnitudes(redshift, filtro, emission_lines = True, IGM = True, DLA 
         delta_m_EL =0
         continuum, lines = shift_to_observed(spectrum_rest, z, lambda_obs)
         den = integrate.trapezoid(continuum*lambda_obs*transmission, lambda_obs)
+
         if IGM:
             tau = get_IGM_absorption(z, lambda_obs, DLA = DLA)
             y = np.exp(-tau)
@@ -172,6 +175,7 @@ def correct_magnitudes(redshift, filtro, emission_lines = True, IGM = True, DLA 
             delta_m_EL = -2.5*np.log10(num/den)
         delta_M.append(delta_m_IGM+delta_m_EL)
     delta_M = np.asarray(delta_M)
+
     return delta_M
     
     
@@ -221,7 +225,7 @@ def host_correction(L, control_negative = True, Niter=3):
     scale = 1 / host_f(6156)
     deltaL = np.zeros(np.shape(L))
     
-    host = get_host_luminosity(L5100, L6156, scale, Niter = Niter)
+    host = get_host_luminosity(L5100, L6156, scale, Niter=Niter)
     
     for j in range(np.shape(L)[0]):
         
