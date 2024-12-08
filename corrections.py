@@ -2,13 +2,16 @@ import os
 import numpy as np
 from scipy import integrate
 import numpy.polynomial.polynomial as poly
-from  my_functions import library as lb
 import pandas as pd
 from scipy.interpolate import interp1d
 
+import sys
+sys.path.append('/Users/nguerrav/Documents/BAL_ML/')
+from my_functions import library as lb
+# import library as lb
 
 
-PATH_TO_DATA =  "my_functions"
+PATH_TO_DATA =  '/Users/nguerrav/Documents/BAL_ML/my_functions/'
 
 
 def lyman_continuum_LAF(redshift, lambda_obs):
@@ -160,24 +163,24 @@ def correct_magnitudes(redshift, filtro, emission_lines = True, IGM = True, DLA 
         continuum, lines = shift_to_observed(spectrum_rest, z, lambda_obs)
         den = integrate.trapezoid(continuum*lambda_obs*transmission, lambda_obs)
         if IGM:
-           tau = get_IGM_absorption(z, lambda_obs, DLA = DLA)
-           y = np.exp(-tau)
-           num = integrate.trapezoid(y*continuum*lambda_obs*transmission, lambda_obs)
-           delta_m_IGM = -2.5*np.log10(num/den)
+            tau = get_IGM_absorption(z, lambda_obs, DLA = DLA)
+            y = np.exp(-tau)
+            num = integrate.trapezoid(y*continuum*lambda_obs*transmission, lambda_obs)
+            delta_m_IGM = -2.5*np.log10(num/den)
         if emission_lines:
-           num = integrate.trapezoid(lines*lambda_obs*transmission, lambda_obs)
-           delta_m_EL = -2.5*np.log10(num/den)
+            num = integrate.trapezoid(lines*lambda_obs*transmission, lambda_obs)
+            delta_m_EL = -2.5*np.log10(num/den)
         delta_M.append(delta_m_IGM+delta_m_EL)
     delta_M = np.asarray(delta_M)
     return delta_M
     
     
 def shift_to_observed(spectrum, redshift, lambda_obs):
-   x = spectrum[:,0]*(redshift +1)
-   continuum = np.interp(lambda_obs, x, spectrum[:,1])
-   lines = np.interp(lambda_obs, x, spectrum[:,2])
+    x = spectrum[:,0]*(redshift +1)
+    continuum = np.interp(lambda_obs, x, spectrum[:,1])
+    lines = np.interp(lambda_obs, x, spectrum[:,2])
 
-   return continuum, lines
+    return continuum, lines
         
         
 def gap_filling(magnitudes, redshift,coefficients, SED_path = None):
@@ -203,24 +206,19 @@ def gap_filling(magnitudes, redshift,coefficients, SED_path = None):
         filled_magnitudes[lack_data_all[:,j], j, 2] = np.polyval(coefficient, filled_magnitudes[lack_data_all[:,j], j, 1])
 
     return filled_magnitudes
-   
-    
-    
-    
-
 
 
 
 
 def host_correction(L, control_negative = True, Niter=3):
     
-    L5100 = lb.monochromatic_lum(L, 5100, out_of_bounds = 'extrapolate')
-    L6156 = lb.monochromatic_lum(L, 6156, out_of_bounds = 'extrapolate')
-    sed= lb.get_host()
+    L5100 = lb.monochromatic_lum(L, 5100, out_of_bounds='extrapolate')
+    L6156 = lb.monochromatic_lum(L, 6156, out_of_bounds='extrapolate')
+    sed = lb.get_host()
     
-    sed[:,1] = sed[:,1]/np.interp(5100, sed[:,0], sed[:,1]) #sed normalized at 5100A°  
+    sed[:,1] = sed[:,1] / np.interp(5100, sed[:,0], sed[:,1]) #sed normalized at 5100A°
     host_f = interp1d(sed[:,0], sed[:,1], bounds_error=False ,fill_value=0)
-    scale = 1/host_f(6156)
+    scale = 1 / host_f(6156)
     deltaL = np.zeros(np.shape(L))
     
     host = get_host_luminosity(L5100, L6156, scale, Niter = Niter)
@@ -239,7 +237,7 @@ def host_correction(L, control_negative = True, Niter=3):
 
 def get_host_luminosity(L5100, L6156, scale, Niter = 3):
     """Returns the Host luminosity at 5100 A.
-       Scale = L5100/L6156
+        Scale = L5100/L6156
     """
     assert(len(L5100) == len(L6156))
     host_5100 = np.zeros((len(L5100,)))
@@ -254,36 +252,36 @@ def get_host_luminosity(L5100, L6156, scale, Niter = 3):
                 agn = l6156-host
             host_5100[j] = scale*host       # from 6156 to 5100
 
-        elif l5100< 10**45.053:
+        elif l5100 < 10**45.053:
             x = np.log10(l5100)-44
             ratio = 0.8052 -1.5502*x+0.9121*x*x-0.1577*(x**3)    #Shen et al. 2011
             host_5100[j] = (ratio*l5100)/(1+ratio)
     return host_5100  
-  
+
     
     
-def process_errors(magnitudes, minimum_error = 0.0, get_fit= True, deg = 3, shift_errors=False, missing_data_error = 0.1):
+def process_errors(magnitudes, minimum_error=0.0, get_fit=True, deg=3, shift_errors=False, missing_data_error = 0.1):
     pro_magnitudes = np.copy(magnitudes)
     pro_magnitudes[:,:,2] = np.maximum(pro_magnitudes[:,:,2], minimum_error)  # set a minimum uncertainty value
     coefficients =[]
     if get_fit:
-       mag=np.ma.MaskedArray(pro_magnitudes[:,:,:], mask=np.isnan(pro_magnitudes[:,:,:]))
-       for j in range(pro_magnitudes.shape[1]):
-           coeff= np.ma.polyfit(mag[:,j,1], mag[:,j,2], deg) #interpolating errors on magnitudes to get similar values
-           if shift_errors:
-              variance= np.sqrt(np.nansum((mag[:,j,2]-np.polyval(coeff,mag[:,j,1]))**2)/mag.shape[0])
-              for i in range(np.shape(pro_magnitudes)[0]):
-                  if np.polyval(coeff, pro_magnitudes[i,j,1])- pro_magnitudes[i,j,2]>=variance:      #shifting errors which deviate from the fit
-                     pro_magnitudes[i,j,2] = np.polyval(coeff,pro_magnitudes[i,j,1])
-           coefficients.append(coeff)
+        mag=np.ma.MaskedArray(pro_magnitudes[:,:,:], mask=np.isnan(pro_magnitudes[:,:,:]))
+        for j in range(pro_magnitudes.shape[1]):
+            coeff = np.ma.polyfit(mag[:,j,1], mag[:,j,2], deg) #interpolating errors on magnitudes to get similar values
+            if shift_errors:
+                variance= np.sqrt(np.nansum((mag[:,j,2]-np.polyval(coeff,mag[:,j,1]))**2)/mag.shape[0])
+                for i in range(np.shape(pro_magnitudes)[0]):
+                    if np.polyval(coeff, pro_magnitudes[i,j,1])- pro_magnitudes[i,j,2]>=variance:      #shifting errors which deviate from the fit
+                        pro_magnitudes[i,j,2] = np.polyval(coeff,pro_magnitudes[i,j,1])
+            coefficients.append(coeff)
     else:      ##  Constant error (i.e. polynomial of 0 degree)
-       for j in range(pro_magnitudes.shape[1]):
-           coeff = [0 for k in range(deg)]
-           coeff.append(missing_data_error)
-           coefficients.append(coeff)
-    
+        for j in range(pro_magnitudes.shape[1]):
+            coeff = [0 for k in range(deg)]
+            coeff.append(missing_data_error)
+            coefficients.append(coeff)
+
     return pro_magnitudes, coefficients
-         
+
 
 ###### Reddening laws
 def calzetti_2000(wavlen, Rv = 4.05):

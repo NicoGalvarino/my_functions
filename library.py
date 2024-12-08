@@ -40,7 +40,8 @@ import pytz
 
 
 
-PATH_TO_DATA =  "my_functions"
+PATH_TO_DATA =  '/Users/nguerrav/Documents/BAL_ML/my_functions/'
+
 
 
 
@@ -69,8 +70,8 @@ def interpolate(x, y, x0, out_of_bounds='error', sort=True, log_log=True):
     y = y[~np.isnan(y)]
     
     if sort:  # sorting the templates
-       order = np.argsort(x)
-       x, y = x[order], y[order]
+        order = np.argsort(x)
+        x, y = x[order], y[order]
     
     N = len(x)-1
     N = len(x)-1
@@ -336,7 +337,7 @@ def get_magnitudes(luminosity, redshift, return_wavelengths = True, H0 =70, Om0 
             
             magnitudes[:, i, 2] = 2.5*(magnitudes[:, i, 2]/magnitudes[:, i, 1])/np.log(10)
             magnitudes[:, i, 1] = -2.5*np.log10( magnitudes[:, i, 1]) -48.6
-     
+    
     if return_wavelengths:
         return magnitudes
     else:
@@ -347,15 +348,15 @@ def monochromatic_lum(data, wavelength, uncertainties = False, out_of_bounds = n
     
     N = np.shape(data)[0]   #Number of QSOs
     if not uncertainties:
-       lum = np.zeros((N,))
-       for i in range(0,N):
-           lum[i]= interpolate(data[i,:,0],data[i,:,1], wavelength, out_of_bounds=out_of_bounds)
+        lum = np.zeros((N,))
+        for i in range(0,N):
+            lum[i]= interpolate(data[i,:,0],data[i,:,1], wavelength, out_of_bounds=out_of_bounds)
     else:
-       lum = np.zeros((N,3)) 
-       for i in range(0,N):
-           lum[i,0]= interpolate(data[i,:,0],data[i,:,1], wavelength, out_of_bounds=out_of_bounds)
-           lum[i,1]= interpolate(data[i,:,0],data[i,:,1]-data[i,:,2], wavelength, out_of_bounds=out_of_bounds)
-           lum[i,2]= interpolate(data[i,:,0],data[i,:,1]+data[i,:,2], wavelength, out_of_bounds=out_of_bounds)
+        lum = np.zeros((N,3)) 
+        for i in range(0,N):
+            lum[i,0]= interpolate(data[i,:,0],data[i,:,1], wavelength, out_of_bounds=out_of_bounds)
+            lum[i,1]= interpolate(data[i,:,0],data[i,:,1]-data[i,:,2], wavelength, out_of_bounds=out_of_bounds)
+            lum[i,2]= interpolate(data[i,:,0],data[i,:,1]+data[i,:,2], wavelength, out_of_bounds=out_of_bounds)
     lum =lum.astype('float')
     return lum  
 
@@ -373,8 +374,8 @@ def merge_bands(df, column_name):
 
 class filtro():
     
-    def __init__(self, filter_name, path = 'tables/filters'):
-        self.path = os.path.join(PATH_TO_DATA,path)
+    def __init__(self, filter_name, path = '/Users/nicolasgalvarinoguerravaras/Documents/EMJM_MASS/Thesis/my_functions/tables/filters/'):
+        self.path = os.path.join(PATH_TO_DATA, path)
         self.get_filter_name(filter_name)
         if hasattr(self, 'name'):
             self.wav = self.get_effective_wavelength()
@@ -384,6 +385,7 @@ class filtro():
         
     def get_filter_name(self, filter_name):
         names = [i for i in os.listdir(self.path) if i.endswith('.dat')]
+        # names = [i for i in os.listdir('/Users/nicolasgalvarinoguerravaras/Documents/EMJM_MASS/Thesis/my_functions/tables/filters/') if i.endswith('.dat')]
         matching_names = [i for i in names if filter_name.casefold() in i.casefold()]
         
         if len(matching_names) == 1:
@@ -399,19 +401,20 @@ class filtro():
         elif len(matching_names) == 0:
             print(f"No filter with {filter_name} name")   
             return None
-      
+
     def get_effective_wavelength(self):
         table = pd.read_csv(os.path.join(self.path, "filter_list.txt"), sep = "\s+")
         eff_wav = float(table[table['Name'] == self.name]['eff_wavelength'].iloc[0])
         return eff_wav
         
     def get_transmission(self):
+        # self.transmission = np.loadtxt(os.path.join(self.path, self.filename))
         self.transmission = np.loadtxt(os.path.join(self.path, self.filename))
         self.wav_min = np.min(self.transmission[self.transmission[:,1]>0,0])
         self.wav_max = np.max(self.transmission[self.transmission[:,1]>0,0])
     
     def convolve(self, wavelengths, f_lambda, return_magnitude = True,
-              left = 0, right = 0):
+                left = 0, right = 0):
         """
         Output : magnitude if return_magnitude = False, else lambda * F_lambda at the effective wavelength
         of the filter.
@@ -445,12 +448,12 @@ def L_2_abs_mag(L, wavlen):
     return -2.5*np.log10(fnu) -48.6
 
             
- ########### AGN /SED
+########### AGN /SED
 
-def get_sed(which_sed='krawczyk', which_type='All', normalization=False, log_log=False, path= 'tables/sed_templates'):
-   
-    path = os.path.join(PATH_TO_DATA ,path)
-   
+def get_sed(which_sed='krawczyk', which_type='All', normalization=False, log_log=False, path='tables/sed_templates/'):
+
+    path = os.path.join(PATH_TO_DATA, path)
+
     if 'krawczyk' in which_sed.lower():
         SED = pd.read_csv(os.path.join(path,'krawczyk_sed.csv') , sep=',', header=0)
         x = SED['lambda'].to_numpy()
@@ -469,7 +472,32 @@ def get_sed(which_sed='krawczyk', which_type='All', normalization=False, log_log
         SED = pd.read_csv(os.path.join(path,'wissh_sed.csv') , sep=',', header=0)
         x = np.log10(SED['lambda'].to_numpy())
         y = np.log10(SED['L'].to_numpy())
-   
+
+    elif 'saccheo_all' in which_sed.lower():
+        SED = pd.read_csv(os.path.join(path,'saccheo_tab4.csv') , sep=',', header=0)
+        x = SED['loglambda'].to_numpy(dtype=np.float64)
+        y = SED['logmean'].to_numpy(dtype=np.float64)
+
+    elif 'saccheo_bal' in which_sed.lower():
+        SED = pd.read_csv(os.path.join(path,'saccheo_tab4.csv') , sep=',', header=0, skipinitialspace=True)
+        x = SED['loglambda'].to_numpy(dtype=np.float64)
+        y = SED['logBAL'].to_numpy()#dtype=np.float64)
+
+    elif 'saccheo_nonbal' in which_sed.lower():
+        SED = pd.read_csv(os.path.join(path,'saccheo_tab4.csv') , sep=',', header=0, skipinitialspace=True)
+        x = SED['loglambda'].to_numpy(dtype=np.float64)
+        y = SED['logNonBAL'].to_numpy(dtype=np.float64)
+
+    elif 'saccheo_weakCiv' in which_sed.lower():
+        SED = pd.read_csv(os.path.join(path,'saccheo_tab4.csv') , sep=',', header=0, skipinitialspace=True)
+        x = SED['loglambda'].to_numpy(dtype=np.float64)
+        y = SED['logWeak'].to_numpy(dtype=np.float64)
+
+    elif 'saccheo_nonweakCiv' in which_sed.lower():
+        SED = pd.read_csv(os.path.join(path,'saccheo_tab4.csv') , sep=',', header=0, skipinitialspace=True)
+        x = SED['loglambda'].to_numpy(dtype=np.float64)
+        y = SED['logNonWeak'].to_numpy(dtype=np.float64)
+
     elif 'richards'in which_sed.lower():
         SED = pd.read_csv(os.path.join(path,'richards_sed.csv') , sep=',', header=0)
         x = SED['lambda'].to_numpy()
@@ -493,11 +521,11 @@ def get_sed(which_sed='krawczyk', which_type='All', normalization=False, log_log
     elif "polletta" in which_sed.lower():
         path = os.path.join(path, "polletta")
         if "all" in which_type.lower():
-             available_sed = [i for i in os.listdir(path) if i.endswith(".sed")]
-             print("Available SEDs from Polletta are:")
-             for name in available_sed:
-                 print(name.replace("_template_norm.sed", ""))
-             return None
+            available_sed = [i for i in os.listdir(path) if i.endswith(".sed")]
+            print("Available SEDs from Polletta are:")
+            for name in available_sed:
+                print(name.replace("_template_norm.sed", ""))
+            return None
         else:
             fname = os.path.join(path,f"{which_type}_template_norm.sed")
             try:
@@ -509,7 +537,7 @@ def get_sed(which_sed='krawczyk', which_type='All', normalization=False, log_log
                 print(f"{which_type} not found, available SEDs from Polletta are:")
                 available_sed = [i for i in os.listdir(path) if i.endswith(".sed")]
                 for name in available_sed:
-                     print(name.replace("_template_norm.sed", ""))
+                    print(name.replace("_template_norm.sed", ""))
                 raise Exception 
     
     elif "berk" in which_sed.lower():
@@ -521,8 +549,6 @@ def get_sed(which_sed='krawczyk', which_type='All', normalization=False, log_log
     else:
         raise Exception("Which_sed can be 'wissh', 'krawczyk', 'richards' 'polletta', 'vandenberk'")
 
-    
-    
     if normalization and log_log:
         normalization = [10**k for k in normalization]
         x = 10**x
@@ -539,6 +565,7 @@ def get_sed(which_sed='krawczyk', which_type='All', normalization=False, log_log
     elif not log_log:
         x = 10**x
         y = 10**y
+
     x = np.reshape(x, (x.shape[0], 1))
     y = np.reshape(y, (y.shape[0], 1))
     sed = np.concatenate((x, y), axis=1)
@@ -547,9 +574,9 @@ def get_sed(which_sed='krawczyk', which_type='All', normalization=False, log_log
 
 
 def get_host(path ='tables/sed_templates/host_galaxy_sed.csv'):
-     path = os.path.join(PATH_TO_DATA, path)
-   
-     return pd.read_csv(path, header = 0, sep = ',' ).to_numpy()
+    path = os.path.join(PATH_TO_DATA, path)
+
+    return pd.read_csv(path, header = 0, sep = ',' ).to_numpy()
 
 
 def find_normalization(wavelengths, L, err_L, sed, lambda_min=1216, lambda_max=50000):
@@ -738,99 +765,11 @@ class quasar_lines:
         return None
     
 def get_quasar_lines(maxrows = 25, flux_sorted = True, remove_iron = True,
-                 dropped_columns = ["u_ID",	"f_ID", "e_obs_wave", "e_flux", "e_flux",
+                    dropped_columns = ["u_ID",	"f_ID", "e_obs_wave", "e_flux", "e_flux",
                                     "f_width", "skew", "e_EW"]):
     qso_lines = quasar_lines(maxrows = maxrows, flux_sorted=flux_sorted, 
-                             remove_iron = remove_iron, dropped_columns = dropped_columns)
+                            remove_iron = remove_iron, dropped_columns = dropped_columns)
     qso_lines.get_plot_ID()
     return qso_lines.table
-
-
-
-
-
-
-   
-    
-   
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
